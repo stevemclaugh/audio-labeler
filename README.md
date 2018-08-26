@@ -1,6 +1,6 @@
 ![](img/Audio_Labeler.png)
 
-### *Running Audio Labeler*
+### *Running Venmo Search*
 
 First, install [Docker CE](https://www.docker.com/community-edition) or [Docker Toolbox](https://www.docker.com/products/docker-toolbox).
 
@@ -9,23 +9,23 @@ Open a new terminal window and enter the following commands to kill the current 
 ```
 docker rm -f audio_labeler
 
-docker pull hipstas/audio-labeler
+docker pull hipstas/venmo-search
 
-docker run -it -d --name audio_labeler -p 8000:8000 -v ~/Desktop/audio_labeler:/home/audio_labeler hipstas/audio-labeler bash
+docker run -it -d --name audio_labeler -p 8000:8000 -v ~/Desktop/audio_labeler:/home/audio_labeler hipstas/venmo-search bash
 ```
 Move some audio files (MP3 or WAV) into the newly created folder `~/Desktop/audio_labeler/media/`. The application will recursively find files in subdirectories. All filenames should be unique to avoid ambiguity down the line.
 
-In the terminal, re-enter the following three commands to relaunch the Audio Labeler application. Audio files are only detected when the Flask application is launched.
+In the terminal, re-enter the following three commands to relaunch the Venmo Search application. Audio files are only detected when the Flask application is launched.
 
 ```
 docker rm -f audio_labeler
 
-docker pull hipstas/audio-labeler
+docker pull hipstas/venmo-search
 
-docker run -it -d --name audio_labeler -p 8000:8000 -v ~/Desktop/audio_labeler:/home/audio_labeler hipstas/audio-labeler bash
+docker run -it -d --name audio_labeler -p 8000:8000 -v ~/Desktop/audio_labeler:/home/audio_labeler hipstas/venmo-search bash
 ```
 
-Point your browser to `localhost:8000` and begin labeling. Audio Labeler is currently configured to label 1-second clips chosen at random from a provided audio collection. (At the moment I'm  not weighting my selection based on each file's duration.)
+Point your browser to `localhost:8000` and begin labeling. Venmo Search is currently configured to label 1-second clips chosen at random from a provided audio collection. (At the moment I'm  not weighting my selection based on each file's duration.)
 
 The 1-second clip we're labeling will autoplay each time the page loads, and is shaded in the waveform display. The following 4 seconds are provided for context if needed.
 
