@@ -11,6 +11,11 @@ import os
 from pymongo import MongoClient
 from pprint import pprint
 import datetime
+import hashlib
+
+## How to hash:
+# hashlib.sha256(b'Hello World').hexdigest()
+password_hash = '06899b046ad79b40e5ce4aca5cac0f9bbdfcfa2b405900f7ef10ace146fe2710'
 
 client = MongoClient()
 
@@ -30,33 +35,110 @@ try: os.remove("./static/plot.png")
 except: pass
 
 
-dd="HELLPPPPPPPP"
 
 # Define a route for the default URL, which loads the form
 @app.route('/',methods=['POST','GET'])
 def form():
 
+    client = MongoClient()
+
+    records = client.venmo_data.transactions
+
+    try:
+        search_string = request.form['search_string']
+        try:
+            search_string_name = request.form['search_string_name']
+            if search_string_name.strip()=='':
+                search_string_name = search_string
+        except:
+            search_string_name = search_string
+    except:
+        search_string = '🏈'
+        search_string_name = 'American Football'
 
 
 
-    # Data for plotting
-    t = np.arange(0.0, 2.0, 0.01)
-    s = 1 + np.sin(2 * np.pi * t)
+    month_unix_start_times = []
 
-    fig, ax = plt.subplots()
-    ax.plot(t, s)
+    for year in range(2012, 2019):
+        for month in range(1,13):
+            unix_time_start = int(datetime.datetime(year, month, 1, 0, 0).timestamp())
+            month_unix_start_times.append(unix_time_start)
 
-    ax.set(xlabel='time (s)', ylabel='voltage (mV)',
-           title='About as simple as it gets, folks')
-    ax.grid()
+    ## Including this value for debugging purposes. Set the number of
+    # months to 12 or 24 to make a quick plot of the first year or two.
 
-    fig.savefig("./static/plot.png")
+    number_of_months = len(month_unix_start_times)
+    number_of_months = 18
+
+
+    transaction_counts_by_month = []
+    total_counts_by_month = []
+
+    percentages_by_month = []
+
+    counter = 0
+
+    for i in list(range(len(month_unix_start_times)-1))[:number_of_months]:
+        start_time = month_unix_start_times[i]-1
+        end_time = month_unix_start_times[i+1]+1
+        month_string = datetime.datetime.fromtimestamp(month_unix_start_times[i]).strftime('%Y-%m')
+        cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+        uses = cursor.count()
+        transaction_counts_by_month.append(uses)
+        total = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }}).count()
+        total_counts_by_month.append(total)
+        try:
+            percentages_by_month.append(uses/total)
+        except:
+            percentages_by_month.append(0)
+        #print(month_unix_start_times[i])
+        counter += 1
+        #print(counter)
+
+    percentages_by_month = [item*100 for item in percentages_by_month]
+
+    month_strings = ['2012-01', '2012-02', '2012-03', '2012-04', '2012-05', '2012-06', '2012-07', '2012-08', \
+                     '2012-09', '2012-10', '2012-11', '2012-12', '2013-01', '2013-02', '2013-03', '2013-04', \
+                     '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12', \
+                     '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', \
+                     '2014-09', '2014-10', '2014-11', '2014-12', '2015-01', '2015-02', '2015-03', '2015-04', \
+                     '2015-05', '2015-06', '2015-07', '2015-08', '2015-09', '2015-10', '2015-11', '2015-12', \
+                     '2016-01', '2016-02', '2016-03', '2016-04', '2016-05', '2016-06', '2016-07', '2016-08', \
+                     '2016-09', '2016-10', '2016-11', '2016-12', '2017-01', '2017-02', '2017-03', '2017-04', \
+                     '2017-05', '2017-06', '2017-07', '2017-08', '2017-09', '2017-10', '2017-11', '2017-12', \
+                     '2018-01', '2018-02', '2018-03', '2018-04', '2018-05', '2018-06', '2018-07', '2018-08', \
+                     '2018-09', '2018-10', '2018-11'][:number_of_months]
 
 
 
+
+    #High-res file
+    #plt.figure(figsize = (30,16))
+
+    plt.figure(figsize = (15,8))
+
+    plt.xticks(range(len(month_strings)), month_strings)  # two arguments: tick positions, tick display list
+
+    plt.xticks(rotation=-85)
+
+
+
+    plt.ylabel('Number of messages containing "{}"'.format(search_string_name.lower()))
+    plt.xlabel('Month')
+
+    plt.title('"{}" use over time'.format(search_string_name))
+
+
+    plt.plot(transaction_counts_by_month)
+
+    plt.savefig("./static/plot.png")
+
+    time.sleep(2)
 
     #response = render_template('form_audio.html')
-    response = render_template('form_audio.html')
+    response = render_template('form_audio.html', search_string=search_string)
+    return response
 
     #, search_string=search_string,start_time=start_time, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
 
@@ -71,7 +153,7 @@ def form():
                 ## Title and labels to be rendered in plot. Reasonable default if not specified.
 
 
-    return response
+
 
 
 # Run the app

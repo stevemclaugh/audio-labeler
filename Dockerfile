@@ -29,7 +29,6 @@ gunicorn \
 setuptools \
 Flask \
 Jinja2 \
-unicodecsv \
 numpy \
 pandas \
 moviepy \

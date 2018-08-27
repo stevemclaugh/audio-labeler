@@ -1,11 +1,11 @@
 <html>
-    <head>
-        <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
-        <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
 
-        <title>Venmo Search</title>
-
-<!--
+<head>
+  <script src="jquery-3.3.1.slim"></script>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <title>Venmo Search</title>
+  <!--
 ### Venmo search Flask app variables ###
 # start_time=start_time,
 # end_time=end_time,
@@ -16,83 +16,87 @@
     ## Title and labels to be rendered in plot. Reasonable default if not specified.
 -->
 
-    </head>
-    <body>
-        <div id="container">
-            <div class="title">
-            <br /><br />
-            <h1>Venmo Search</h1>
-            <br /><br />
+</head>
+
+<body>
+  <div id="container">
+    <div class="title">
+      <br /><br />
+      <h1></h1>
+      <br /><br />
+    </div>
+
+    <div id="content">
+
+      <div class="container">
+
+        <div class="plot">
+
+
+
+
+
+          <img src="{{ url_for('static', filename='plot.png') }}" width=1000>
+
         </div>
 
-        <div id="content">
-
-                <div class="container">
-
-                  <div class="plot">
-
-                    <h3>{{ dd }}</h3>
 
 
+        <form method="post" action="{{ url_for('form') }}">
 
-                    <img src="{{ url_for('static', filename='plot.png') }}">
-
-                  </div>
-
-
-
-
-
-
-
-              <h3>
-                <form method="post" action="{{ url_for('form') }}">
-
-                    <!--
+          <!--
                     <input type="hidden" value="{{ audio_file_id }}" name="audio_file_id" />
                   -->
 
 
-                  <h3>Search string</h3>
-                    <input type="text" size="70" value="{{ search_string }}" name="search_string" />
+          <h3>Search string</h3>
+          <input type="text" size="70" value="{{ search_string }}" name="search_string" />
+          <h4>Search string name (optional)</h4>
+          <input type="text" size="70" value="{{ search_string_name }}" name="search_string_name" />
 
-<!-- Search string options -->
+          <!-- Search string options -->
+          <br />
 
-<input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
- <input type="checkbox" name="emoji_tokenize" value="true"> Each emoji considered a token
-
-
-
-<!-- Start and end time -->
-<h3>Start time</h3>
-<input type="date" name="start_time">
-<br />
-
-<h3>End time</h3>
-<input type="date" name="end_time">
-<br />
-
-            <h3>Resolution</h3>
-                    <input type="radio" name="resolution" value="day"> Day<br>
-                    <input type="radio" name="resolution" value="week"> Week<br>
-                    <input type="radio" name="resolution" value="month" checked> Month
-
-                    <br />
-            <h3>Auth code:</h3>
-                    <input type="text" name="auth_code" value="temp">
-
-
-                    <br /><br />
-                    <input type="submit" name="button" id="plot_button" value="Plot" />
+          <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
+          <input type="checkbox" name="emoji_tokenize" value="true"> Each emoji considered a token
 
 
 
-                </form>
-            </h3>
+          <!-- Start and end time -->
+          <h3>Start time</h3>
+          <input type="number" name="start_time_unix">
+          <br />
+          <input type="date" name="start_time">
+          <br />
 
-            <br /><br />
+          <h3>End time</h3>
+          <input type="number" name="end_time_unix">
+          <br />
+          <input type="date" name="end_time">
+          <br />
 
-            </div>
-        </div>
-    </body>
+          <h3>Resolution</h3>
+          <input type="radio" name="resolution" value="day"> Day<br>
+          <input type="radio" name="resolution" value="week"> Week<br>
+          <input type="radio" name="resolution" value="month" checked> Month
+
+          <br />
+          <h3>Auth code:</h3>
+          <input type="text" name="auth_code" value="temp">
+
+
+          <br /><br />
+          <input type="submit" name="button" id="plot_button" value="Plot" />
+
+
+
+        </form>
+        </h3>
+
+        <br /><br />
+
+      </div>
+    </div>
+</body>
+
 </html>
