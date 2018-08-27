@@ -3,11 +3,18 @@
 # We'll use `url_for` to get some URLs for the app in the templates.
 from flask import Flask, render_template, request, url_for
 import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 import time
 import os
+from pymongo import MongoClient
+from pprint import pprint
+import datetime
 
+client = MongoClient()
+
+records = client.venmo_data.transactions
 
 ## Flask launch loop bash command (for testing):
 #  while :; do python2 app.py & sleep 30 && killall python2; sleep 0.5; done
@@ -23,13 +30,14 @@ try: os.remove("./static/plot.png")
 except: pass
 
 
-
-
-
+dd="HELLPPPPPPPP"
 
 # Define a route for the default URL, which loads the form
 @app.route('/',methods=['POST','GET'])
 def form():
+
+
+
 
     # Data for plotting
     t = np.arange(0.0, 2.0, 0.01)

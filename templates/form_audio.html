@@ -31,6 +31,10 @@
 
                   <div class="plot">
 
+                    <h3>{{ dd }}</h3>
+
+
+
                     <img src="{{ url_for('static', filename='plot.png') }}">
 
                   </div>
@@ -68,13 +72,17 @@
 <input type="date" name="end_time">
 <br />
 
-<h3>Resolution</h3>
-                <!-- Resolution -->
+            <h3>Resolution</h3>
                     <input type="radio" name="resolution" value="day"> Day<br>
                     <input type="radio" name="resolution" value="week"> Week<br>
                     <input type="radio" name="resolution" value="month" checked> Month
 
                     <br />
+            <h3>Auth code:</h3>
+                    <input type="text" name="auth_code" value="temp">
+
+
+                    <br /><br />
                     <input type="submit" name="button" id="plot_button" value="Plot" />
 
 
