@@ -66,8 +66,8 @@ def form():
     except: resolution = 'month'
     ## 'day', 'week', or 'month'
 
-    try: auth_code = request.form['auth_code']
-    except: auth_code = ''
+    try: auth_key = request.form['auth_key']
+    except: auth_key = ''
 
 
     try:
@@ -163,8 +163,13 @@ def form():
     time.sleep(2)
 
     #response = render_template('form_audio.html')
-    response = render_template('form_audio.html', search_string=search_string, search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, resolution=resolution, auth_code = auth_code)
-    return response
+
+    if password_hash == hashlib.sha256(auth_key.encode(encoding='UTF-8')).hexdigest():
+        response = render_template('form.html', search_string=search_string, search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, resolution=resolution, auth_key = auth_key)
+        return response
+    else:
+        response = render_template('auth.html', auth_key=auth_key)
+        return response
 
     #, search_string=search_string,start_time=start_time, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
 
