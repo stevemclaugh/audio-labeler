@@ -44,6 +44,32 @@ def form():
 
     records = client.venmo_data.transactions
 
+    try: case_sensitive = request.form['case_sensitive']
+    except: case_sensitive = 'false'
+
+    try: emoji_tokenize = request.form['emoji_tokenize']
+    except: emoji_tokenize = 'false'
+
+    try: start_time_unix = request.form['start_time_unix']
+    except: start_time_unix = 0
+
+    try: start_time = request.form['start_time']
+    except: start_time = 0
+
+    try: end_time_unix = request.form['end_time_unix']
+    except: end_time_unix = 0
+
+    try: end_time  = request.form['end_time']
+    except: end_time = 0
+
+    try: resolution = request.form['resolution']
+    except: resolution = 'month'
+    ## 'day', 'week', or 'month'
+
+    try: auth_code = request.form['auth_code']
+    except: auth_code = ''
+
+
     try:
         search_string = request.form['search_string']
         try:
@@ -137,7 +163,7 @@ def form():
     time.sleep(2)
 
     #response = render_template('form_audio.html')
-    response = render_template('form_audio.html', search_string=search_string)
+    response = render_template('form_audio.html', search_string=search_string, search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, resolution=resolution, auth_code = auth_code)
     return response
 
     #, search_string=search_string,start_time=start_time, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
