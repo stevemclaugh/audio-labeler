@@ -32,11 +32,12 @@
 
         <div class="plot">
 
+          <p>{{ start_time }}</p>
 
 
           {% if search_string %}
 
-          <h3 id="progress_count">0.0%</h3>
+          <h3 id="progress_count">Progress: 0.0%</h3>
           <img src="{{ url_for('static', filename='plot.png') }}" width=1000 id="plot_img">
           <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
 
@@ -60,17 +61,18 @@
           }
 
 
-          counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+          var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
 
 
           setInterval(function() {
               var plot_img_element = document.getElementById('plot_img');
               plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
               counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
-              counter_element.innerHTML = counter_value;
+              counter_element.innerHTML = "Progress: " + counter_value;
               if(counter_value == "100.0%"){
                 plot_img_element.style.display = "block";
                 loading_element.style.display = "none";
+                counter_element.style.display = "none";
               }
           }, 5000);
 
@@ -101,7 +103,12 @@
           <!-- Search string options -->
           <br />
 
-          <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
+          {% if case_sensitive=='true' %}
+            <input type="checkbox" name="case_sensitive" value="true" checked> Case-sensitive<br>
+            {% else %}
+            <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
+          {% endif %}
+
           <input type="checkbox" name="emoji_tokenize" value="true"> Each emoji considered a token
 
 
@@ -125,7 +132,7 @@
           <input type="radio" name="resolution" value="month" checked> Month
 
           <br />
-          <h3>Auth code:</h3>
+          <h3>Auth key</h3>
           <input type="text" name="auth_key" value="{{auth_key}}">
 
 
@@ -135,7 +142,8 @@
 
 
         </form>
-        </h3>
+
+        <p>{{ start_time }}</p>
 
         <br /><br />
 

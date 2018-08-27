@@ -41,11 +41,26 @@ except: pass
 @app.route('/',methods=['POST','GET'])
 def form():
 
+
     client = MongoClient()
 
     records = client.venmo_data.transactions
 
     plot_complete = 'false'
+
+    search_string_name = ''
+    try:
+        search_string_name = ''
+        search_string = request.form['search_string']
+        try:
+            search_string_name = request.form['search_string_name']
+        except:
+            pass
+    except:
+        search_string = ''
+        search_string_name = ''
+
+
 
     try: case_sensitive = request.form['case_sensitive']
     except: case_sensitive = 'false'
@@ -70,8 +85,7 @@ def form():
     ## 'day', 'week', or 'month'
 
 
-
-    ## Verifying auth key
+    ### Verifying auth key ###
     try: auth_key = request.form['auth_key']
     except: auth_key = ''
 
@@ -81,22 +95,8 @@ def form():
 
 
 
-    try:
-        search_string = request.form['search_string']
-        try:
-            search_string_name = request.form['search_string_name']
-            if search_string_name.strip()=='':
-                search_string_name = search_string
-        except:
-            search_string_name = search_string
-    except:
-        search_string = ''
-        search_string_name = ''
-
-
 
     def search_and_plot():
-
 
         month_unix_start_times = []
 
@@ -109,7 +109,7 @@ def form():
         # months to 12 or 24 to make a quick plot of the first year or two.
 
         number_of_months = len(month_unix_start_times)
-        number_of_months = 36
+        number_of_months = 16
 
         transaction_counts_by_month = []
         total_counts_by_month = []
@@ -122,7 +122,15 @@ def form():
             start_time = month_unix_start_times[i]-1
             end_time = month_unix_start_times[i+1]+1
             month_string = datetime.datetime.fromtimestamp(month_unix_start_times[i]).strftime('%Y-%m')
-            cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+
+            if case_sensitive == 'true':
+                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+            else:
+                #### NEED TO GET
+                #### A COMMAND THAT ACTUALLT WORKS:
+                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                #### Currently a dummy command; canse insensitivity doesn't work yet. @@@@
+
             uses = cursor.count()
             transaction_counts_by_month.append(uses)
             #total = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }}).count()
@@ -157,14 +165,22 @@ def form():
         plt.figure(figsize = (15,8))
         plt.xticks(range(len(month_strings)), month_strings)  # two arguments: tick positions, tick display list
         plt.xticks(rotation=-85)
-        plt.ylabel('Number of messages containing "{}"'.format(search_string_name.lower()))
+        if search_string_name.strip() == '':
+            plt.ylabel('Number of messages containing "{}"'.format(search_string))
+            plt.title('"{}" use over time'.format(search_string))
+        else:
+            plt.ylabel('Number of messages containing "{}"'.format(search_string_name.lower()))
+            plt.title('"{}" use over time'.format(search_string_name))
         plt.xlabel('Month')
-        plt.title('"{}" use over time'.format(search_string_name))
         plt.plot(transaction_counts_by_month)
         plt.savefig("./static/plot.png")
 
         time.sleep(0.005)
         plot_complete = 'true'
+
+
+
+
 
 
 
@@ -193,6 +209,40 @@ def form():
                 ## day, week, or month
             # title=title, xlabel=xlabel, ylabel=ylabe
                 ## Title and labels to be rendered in plot. Reasonable default if not specified.
+
+
+
+
+
+# Define a route for the default URL, which loads the form
+@app.route('/user',methods=['POST','GET'])
+def user():
+    actor_id = request.args['id']
+    transaction_list = []
+    transaction_lol = []
+    cursor = records.find({'actor.id': str(actor_id)})
+    header = ["Transaction Date", "Message", "Target Name", "Target ID"]
+
+    for item in cursor:
+        transaction_list.append(str(item))
+        unix_time = item['unix_time']
+        account_created = item['actor']['date_created']
+        actor_name = item['actor']['name']
+        picture_url = item['actor']['picture']
+        username = item['actor']['username']
+        message = item['message']
+        transaction_date = item['transactions'][0]['target']['date_created']
+        target_name = item['transactions'][0]['target']['name']
+        target_id = item['transactions'][0]['target']['id']
+        row = [transaction_date, message, target_name, target_id]
+        transaction_lol.append(row)
+
+    transaction_lol.sort(key=lambda x: x[0])
+
+    transaction_count = len(transaction_list)
+
+    response = render_template('user.html', actor_id=actor_id, username=username, header = header, transaction_count=transaction_count, account_created=account_created, actor_name=actor_name, picture_url=picture_url, transaction_lol=transaction_lol, transaction_list=transaction_list)
+    return response
 
 
 

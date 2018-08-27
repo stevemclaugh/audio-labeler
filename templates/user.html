@@ -1,0 +1,110 @@
+<html>
+
+<head>
+  <script src="jquery-3.3.1.slim"></script>
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <title>Venmo Search</title>
+  <!--
+### Venmo search Flask app variables ###
+# start_time=start_time,
+# end_time=end_time,
+    ## either entered as text or generated via dropdowns using javascript
+# resolution
+    ## day, week, or month
+# title=title, xlabel=xlabel, ylabel=ylabe
+    ## Title and labels to be rendered in plot. Reasonable default if not specified.
+-->
+
+</head>
+
+<body>
+  <div id="container">
+    <div class="title">
+      <br /><br />
+      <h1></h1>
+      <br /><br />
+    </div>
+
+    <div id="content">
+
+      <div class="container">
+
+        <div class="plot">
+
+
+
+          <h3>{{ actor_name }}</h3>
+          <h4>User ID: {{ actor_id }}</h4>
+          <h4>Username: {{ username }}</h4>
+          <h4>Account created: {{ account_created }}</h4>
+          <h4>Transactions: {{ transaction_count }}</h4>
+          <img src="{{ picture_url }}" />
+
+          <form method="post" action="{{ url_for('user') }}">
+
+
+
+
+          </form>
+
+
+
+
+
+
+          <br /><br />
+
+
+          <table cellpadding="10">
+            {% for item in header %}
+            <td style="padding: 15px; text-align: left;">
+              <b>{{ item }}</b>
+            </td>
+            {% endfor %}
+
+          {% for row in transaction_lol %}
+
+            <tr>
+              <td style="padding: 15px; text-align: left;">
+                {{ row[0] }}
+              </td>
+              <td style="padding: 15px; text-align: left;">
+                {{ row[1] }}
+              </td>
+              <td style="padding: 15px; text-align: left;">
+                {{ row[2] }}
+              </td>
+              <td style="padding: 15px; text-align: left;">
+                <a href="user?id={{ row[3] }}">{{ row[3] }}</a>
+              </td>
+            </tr>
+
+          {% endfor %}
+          </table>
+
+
+
+
+
+
+
+
+
+          <br /><br /><br /><br /><br /><br />
+
+
+          <h3>Auth key:</h3>
+          <input type="text" name="auth_key" value="{{auth_key}}">
+
+
+          <br /><br />
+          <input type="submit" name="button" id="plot_button" value="Enter" />
+
+
+
+        </div>
+      </div>
+</body>
+
+</html>
