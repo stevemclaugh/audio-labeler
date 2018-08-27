@@ -34,9 +34,53 @@
 
 
 
+          {% if search_string %}
+
+          <h3 id="progress_count">0.0%</h3>
+          <img src="{{ url_for('static', filename='plot.png') }}" width=1000 id="plot_img">
+          <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
+
+          <script>
+          var plot_img_element = document.getElementById('plot_img');
+          var loading_element = document.getElementById('loading_img');
+          plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+          plot_img_element.style.display = "none";
+
+          var counter_element = document.getElementById('progress_count');
+
+          function loadFile(filePath) {
+            var result = null;
+            var xmlhttp = new XMLHttpRequest();
+            xmlhttp.open("GET", filePath, false);
+            xmlhttp.send();
+            if (xmlhttp.status==200) {
+              result = xmlhttp.responseText;
+            }
+            return result;
+          }
 
 
-          <img src="{{ url_for('static', filename='plot.png') }}" width=1000>
+          counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+
+
+          setInterval(function() {
+              var plot_img_element = document.getElementById('plot_img');
+              plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+              counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+              counter_element.innerHTML = counter_value;
+              if(counter_value == "100.0%"){
+                plot_img_element.style.display = "block";
+                loading_element.style.display = "none";
+              }
+          }, 5000);
+
+
+
+          </script>
+
+          {% endif %}
+
+
 
         </div>
 

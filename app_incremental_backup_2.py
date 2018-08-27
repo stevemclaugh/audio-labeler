@@ -109,7 +109,7 @@ def form():
         # months to 12 or 24 to make a quick plot of the first year or two.
 
         number_of_months = len(month_unix_start_times)
-        number_of_months = 36
+        number_of_months = 48
 
         transaction_counts_by_month = []
         total_counts_by_month = []
@@ -134,7 +134,7 @@ def form():
             #print(month_unix_start_times[i])
             counter += 1
             with open('./static/counter.txt', 'w') as fo:
-                fo.write(str(round(100*counter/number_of_months, 2))+'%')
+                fo.write(str(100*counter/number_of_months)+'%')
             #print(counter)
 
         percentages_by_month = [item*100 for item in percentages_by_month]
