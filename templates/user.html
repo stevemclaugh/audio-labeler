@@ -33,28 +33,57 @@
         <div class="plot">
 
 
-
+          <div>
           <h3>{{ actor_name }}</h3>
           <h4>User ID: {{ actor_id }}</h4>
           <h4>Username: {{ username }}</h4>
           <h4>Account created: {{ account_created }}</h4>
-          <h4>Transactions: {{ transaction_count }}</h4>
+          <h4>Outgoing transactions: {{ transaction_count }}</h4>
+          <h4>Incoming transactions: {{ incoming_transaction_count }}</h4>
           <img src="{{ picture_url }}" />
 
-          <form method="post" action="{{ url_for('user') }}">
+        </div>
+          <div>
 
+          <h3>Top Friends</h3>
+          <table>
 
+            <td style="padding: 15px; text-align: left;">
+              <b>Name</b>
+            </td>
 
+            <td style="padding: 15px; text-align: left;">
+              <b>ID</b>
+            </td>
 
-          </form>
+            <td style="padding: 15px; text-align: left;">
+              <b>Transactions</b>
+            </td>
 
+          {% for row in top_friends %}
+            <tr>
 
+                <td style="padding: 15px; text-align: left;">
+                  {{ row[0][0] }}
+                </td>
 
+                <td style="padding: 15px; text-align: left;">
+                  <a href="user?id={{ row[0][1] }}&pass=true">{{ row[0][1] }}</a>
+                </td>
 
+                <td style="padding: 15px; text-align: left;">
+                    {{ row[1] }}
+                </td>
+
+            </tr>
+          {% endfor %}
+          </table>
+</div>
 
 
           <br /><br />
 
+          <h3>Outgoing Transactions</h3>
 
           <table cellpadding="10">
             {% for item in header %}
@@ -76,29 +105,61 @@
                 {{ row[2] }}
               </td>
               <td style="padding: 15px; text-align: left;">
-                <a href="user?id={{ row[3] }}">{{ row[3] }}</a>
+                <a href="user?id={{ row[3] }}&pass=true">{{ row[3] }}</a>
               </td>
             </tr>
 
           {% endfor %}
           </table>
 
+<br /><br />
 
 
 
+          <h3>Incoming Transactions</h3>
 
 
+                    <table cellpadding="10">
+                      {% for item in header_incoming %}
+                      <td style="padding: 15px; text-align: left;">
+                        <b>{{ item }}</b>
+                      </td>
+                      {% endfor %}
 
+                    {% for row in incoming_transaction_lol %}
+
+                      <tr>
+                        <td style="padding: 15px; text-align: left;">
+                          {{ row[0] }}
+                        </td>
+                        <td style="padding: 15px; text-align: left;">
+                          {{ row[1] }}
+                        </td>
+                        <td style="padding: 15px; text-align: left;">
+                          {{ row[2] }}
+                        </td>
+                        <td style="padding: 15px; text-align: left;">
+                          <a href="user?id={{ row[3] }}&pass=true">{{ row[3] }}</a>
+                        </td>
+                      </tr>
+
+                    {% endfor %}
+                    </table>
 
 
           <br /><br /><br /><br /><br /><br />
 
 
-          <h3>Auth key:</h3>
-          <input type="text" name="auth_key" value="{{auth_key}}">
+          <form method="post" action="{{ url_for('user') }}">
 
+
+          <h3>Auth key:</h3>
+          <input type="text" name="auth_key" value="{{ auth_key }}">
+          </form>
 
           <br /><br />
+          <input type=hidden name="actor_id" value="{{ actor_id }}">
+
           <input type="submit" name="button" id="plot_button" value="Enter" />
 
 

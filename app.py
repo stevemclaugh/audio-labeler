@@ -13,6 +13,7 @@ from pprint import pprint
 import datetime
 import hashlib
 import multiprocessing
+import collections
 
 ## How to hash:
 # hashlib.sha256(b'Hello World').hexdigest()
@@ -118,6 +119,8 @@ def form():
 
         counter = 0
 
+        random_transactions = []
+
         for i in list(range(len(month_unix_start_times)-1))[:number_of_months]:
             start_time = month_unix_start_times[i]-1
             end_time = month_unix_start_times[i+1]+1
@@ -132,6 +135,16 @@ def form():
                 #### Currently a dummy command; canse insensitivity doesn't work yet. @@@@
 
             uses = cursor.count()
+
+            random_indices = set(random.sample(list(range(uses)), 10))
+
+            j=0
+            for item in cursor:
+                if j in random_indices:
+                    random_transactions.append(item)
+                j+=1
+
+
             transaction_counts_by_month.append(uses)
             #total = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }}).count()
             #total_counts_by_month.append(total)
@@ -217,11 +230,31 @@ def form():
 # Define a route for the default URL, which loads the form
 @app.route('/user',methods=['POST','GET'])
 def user():
-    actor_id = request.args['id']
+
+    try: actor_id = request.form['actor_id']
+    except: actor_id = request.args['id']
+
+    try: auth_key = request.form['auth_key']
+    except: auth_key = ''
+
+    try: pass_status = request.args['pass']
+    except: pass_status = 'false'
+
+
+
+    if password_hash != hashlib.sha256(auth_key.encode(encoding='UTF-8')).hexdigest():
+        if pass_status != 'true':
+            response = render_template('auth_user.html', auth_key=auth_key, actor_id=actor_id)
+            return response
+
+
     transaction_list = []
     transaction_lol = []
     cursor = records.find({'actor.id': str(actor_id)})
     header = ["Transaction Date", "Message", "Target Name", "Target ID"]
+
+
+
 
     for item in cursor:
         transaction_list.append(str(item))
@@ -231,7 +264,7 @@ def user():
         picture_url = item['actor']['picture']
         username = item['actor']['username']
         message = item['message']
-        transaction_date = item['transactions'][0]['target']['date_created']
+        transaction_date = item['created_time']
         target_name = item['transactions'][0]['target']['name']
         target_id = item['transactions'][0]['target']['id']
         row = [transaction_date, message, target_name, target_id]
@@ -239,9 +272,42 @@ def user():
 
     transaction_lol.sort(key=lambda x: x[0])
 
-    transaction_count = len(transaction_list)
 
-    response = render_template('user.html', actor_id=actor_id, username=username, header = header, transaction_count=transaction_count, account_created=account_created, actor_name=actor_name, picture_url=picture_url, transaction_lol=transaction_lol, transaction_list=transaction_list)
+
+    incoming_transaction_list = []
+    incoming_transaction_lol = []
+    cursor = records.find({'transactions.0.target.id': str(actor_id)})
+    header_incoming = ["Transaction Date", "Message", "Sender Name", "Sender ID"]
+
+
+    for item in cursor:
+        incoming_transaction_list.append(str(item))
+        sender_name = item['actor']['name']
+        sender_id = item['actor']['id']
+        picture_url = item['actor']['picture']
+        username = item['actor']['username']
+        message = item['message']
+        transaction_date = item['created_time']
+        row = [transaction_date, message, sender_name, sender_id]
+        incoming_transaction_lol.append(row)
+
+    incoming_transaction_lol.sort(key=lambda x: x[0])
+
+
+
+
+    ## Creating a list of top friends
+    friends_lol = [(item[2], item[3]) for item in transaction_lol]
+    counter=collections.Counter(friends_lol)
+    top_friends = counter.most_common(5)
+
+    transaction_count = len(transaction_list)
+    incoming_transaction_count = len(incoming_transaction_lol)
+
+    response = render_template('user.html', actor_id=actor_id, username=username, header = header, header_incoming=header_incoming, \
+    transaction_count=transaction_count, account_created=account_created, actor_name=actor_name, \
+    picture_url=picture_url, transaction_lol=transaction_lol, incoming_transaction_lol=incoming_transaction_lol, \
+    top_friends=top_friends, auth_key=auth_key, incoming_transaction_count=incoming_transaction_count)
     return response
 
 
