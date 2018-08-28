@@ -1,0 +1,303 @@
+<html>
+
+<head>
+  <script src="jquery-3.3.1.slim"></script>
+
+
+<!--  <script>
+
+window.onload=function(){ with (new XMLHttpRequest()) {
+  onreadystatechange=cb; open('GET','./static/random_messages.csv',true); responseType='text';send();
+}}
+function cb(){if(this.readyState===4)document.getElementById('main')
+                                             .innerHTML=tbl(this.responseText); }
+function tbl(csv){ // do whatever is necessary to create your table here ...
+ return csv.split('\n')
+           .map(function(tr,i){return '<tr><td>'
+                                     +tr.replace(/,/g,'</td><td>')
+                                     +'</td></tr>';})
+           .join('\n'); }
+-->
+
+
+</script>
+
+  <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+
+  <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+
+  <title>Venmo Search</title>
+  <!--
+### Venmo search Flask app variables ###
+# start_time=start_time,
+# end_time=end_time,
+    ## either entered as text or generated via dropdowns using javascript
+# resolution
+    ## day, week, or month
+# title=title, xlabel=xlabel, ylabel=ylabe
+    ## Title and labels to be rendered in plot. Reasonable default if not specified.
+-->
+
+</head>
+
+<body>
+
+
+  <div class="header">
+    <h1></h1>
+    <p></p>
+  </div>
+
+  <div class="topnav">
+    <a href="#">Random User</a>
+    <a href="#">NLP</a>
+    <a href="#">Link</a>
+    <a href="#" style="float:right">Link</a>
+  </div>
+
+  <div class="row">
+    <div class="leftcolumn">
+      <div class="card">
+        <h2></h2>
+        <h5></h5>
+
+          </div>
+      <div class="card">
+
+                            {% if search_string %}
+
+                            <center>
+                            <h3 id="progress_count">Progress: 0.0%</h3>
+                            <img src="{{ url_for('static', filename='plot.png') }}" width=1250 id="plot_img">
+                            <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
+                            </center>
+
+                          <script>
+                            var plot_img_element = document.getElementById('plot_img');
+                            var loading_element = document.getElementById('loading_img');
+                            plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+                            plot_img_element.style.display = "none";
+
+                            var counter_element = document.getElementById('progress_count');
+
+                            function loadFile(filePath) {
+                              var result = null;
+                              var xmlhttp = new XMLHttpRequest();
+                              xmlhttp.open("GET", filePath, false);
+                              xmlhttp.send();
+                              if (xmlhttp.status==200) {
+                                result = xmlhttp.responseText;
+                              }
+                              return result;
+                            }
+
+                            var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+
+                            setInterval(function() {
+                                var plot_img_element = document.getElementById('plot_img');
+                                plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+                                counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+                                counter_element.innerHTML = "Progress: " + counter_value;
+                                if(counter_value == "100.0%"){
+                                  plot_img_element.style.display = "block";
+                                  loading_element.style.display = "none";
+                                  counter_element.style.display = "none";
+                                }
+                            }, 4500);
+
+                          </script>
+
+                            {% else %}
+
+                            <p>Enter a search term in the right column.<p>
+
+                            {% endif %}
+
+
+        </div>
+    </div>
+    <div class="rightcolumn">
+      <div class="card">
+        <form method="post" action="{{ url_for('form') }}">
+
+          <!--
+                    <input type="hidden" value="{{ audio_file_id }}" name="audio_file_id" />
+                  -->
+
+
+          <h3>Search string</h3>
+          <input type="text" size="70" value="{{ search_string }}" name="search_string" />
+          <h4>Search string display name (optional)</h4>
+          <input type="text" size="70" value="{{ search_string_name }}" name="search_string_name" />
+
+          <!-- Search string options -->
+          <br />
+
+          {% if case_sensitive=='true' %}
+            <input type="checkbox" name="case_sensitive" value="true" checked> Case-sensitive<br>
+            {% else %}
+            <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
+          {% endif %}
+
+
+
+
+          <!-- Start and end time -->
+          <h3>Start time</h3>
+          <input type="number" name="start_time_unix">
+          <br />
+          <input type="date" name="start_time">
+          <br />
+
+          <h3>End time</h3>
+          <input type="number" name="end_time_unix">
+          <br />
+          <input type="date" name="end_time">
+          <br />
+
+          <h3>Resolution</h3>
+          <input type="radio" name="resolution" value="day"> Day<br>
+          <input type="radio" name="resolution" value="week"> Week<br>
+          <input type="radio" name="resolution" value="month" checked> Month
+
+          <br />
+
+          <input type="hidden" name="auth_key" value="{{auth_key}}">
+
+
+          <br /><br />
+          <input type="submit" name="button" id="plot_button" value="Plot" />
+
+
+
+        </form>
+      </div>
+      <div class="card">
+        <h3></h3>
+      </div>
+      <div class="card">
+        <h3></h3>
+        <p></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <h2></h2>
+  </div>
+
+
+
+
+
+
+
+
+
+
+<!--    -->
+
+
+
+
+
+
+
+
+  <div id="container">
+    <div class="title">
+      <br /><br />
+      <h1></h1>
+      <br /><br />
+    </div>
+
+    <div id="content">
+
+      <div class="container">
+
+
+
+        {% for item in header %}
+          <!-- -->
+          {% for item in header %}
+            <!-- -->
+            {% for item in header %}
+              <!-- -->
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+
+
+
+<!--
+
+        <table>
+          {% for item in header %}
+            <td style="padding: 15px; text-align: left;">
+              <b>{{ item }}</b>
+            </td>
+          {% endfor %}
+
+
+        </table>
+
+<p><a href="/static/random_messages.csv">Random messages CSV</a></p>
+
+-->
+
+
+
+
+        <br /><br />
+
+      </div>
+    </div>
+
+
+<div>
+
+  <p id="jstest"></p>
+
+
+                            <script>
+                              //var plot_img_element = document.getElementById('plot_img');
+
+
+                              var counter_element = document.getElementById('main');
+
+                              function loadFile(filePath) {
+                                var result = null;
+                                var xmlhttp = new XMLHttpRequest();
+                                xmlhttp.open("GET", filePath, false);
+                                xmlhttp.send();
+                                if (xmlhttp.status==200) {
+                                  result = xmlhttp.responseText;
+                                }
+                                return result;
+                              }
+
+                              var csv_text = loadFile("{{ url_for('static', filename='./static/random_messages.csv') }}");
+
+                              setInterval(function() {
+                                var csv_text = loadFile("{{ url_for('static', filename='./static/random_messages.csv') }}");
+                                  var paragraph = document.getElementById('jstest');
+                                  paragraph.innerHTML = csv_text;
+
+                              }, 4500);
+
+                            </script>
+
+
+
+<!--<table id="main"></table>-->
+
+
+
+</div>
+
+</body>
+
+</html>
