@@ -47,12 +47,12 @@ def form():
         else:
             write_classname = request.form['button']
         audio_file_id=request.form['audio_file_id']
-        start_time=request.form['start_time']
+        start_date=request.form['start_date']
         output_csv_path='/home/audio_labeler/output_table.csv'
         with open(output_csv_path,'a') as fo:
             label_duration = 1
             fo.write(audio_file_id + ',' + \
-            str(float(start_time)) + ',' + \
+            str(float(start_date)) + ',' + \
             str(float(label_duration)) + ',' + \
             '''"''' + write_classname + '''"\n''')
         shutil.copy(output_csv_path,'/home/audio_labeler/static/output/output_table.csv')
@@ -83,12 +83,12 @@ def form():
     media_path = random.choice(media_paths)
     audio_file_id = media_path.split('/')[-1][:-4]
     duration = media_duration(media_path)
-    start_time = int((random.random()*(duration-5.0)))
+    start_date = int((random.random()*(duration-5.0)))
     snd = AudioFileClip.AudioFileClip(media_path)
     temp_wav_filename = str(random.random())[2:] + '.wav'
-    snd.subclip(start_time,start_time + 5).write_audiofile('/home/audio_labeler/static/' + temp_wav_filename)
+    snd.subclip(start_date,start_date + 5).write_audiofile('/home/audio_labeler/static/' + temp_wav_filename)
     response = render_template('form_audio.html', audio_file_id=audio_file_id, \
-                start_time=start_time, classname=classname, temp_wav_filename=temp_wav_filename, \
+                start_date=start_date, classname=classname, temp_wav_filename=temp_wav_filename, \
                 media_path=media_path, label_counts=label_counts[:15])
     return response
 

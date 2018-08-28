@@ -9,8 +9,8 @@
   <title>Venmo Search</title>
   <!--
 ### Venmo search Flask app variables ###
-# start_time=start_time,
-# end_time=end_time,
+# start_date=start_date,
+# end_date=end_date,
     ## either entered as text or generated via dropdowns using javascript
 # resolution
     ## day, week, or month
@@ -33,8 +33,6 @@
       <div class="container">
 
         <div class="plot">
-
-          <p>{{ start_time }}</p>
 
 
           {% if search_string %}
@@ -88,63 +86,72 @@
 
         </div>
 
-
+<div>
 
         <form method="post" action="{{ url_for('form') }}">
-
-          <!--
-                    <input type="hidden" value="{{ audio_file_id }}" name="audio_file_id" />
-                  -->
-
+          <br />
 
           <h3>Search string</h3>
           <input type="text" size="70" value="{{ search_string }}" name="search_string" />
-          <h4>Search string display name (optional)</h4>
+          <br />
+
+
+          {% if case_sensitive=='true' %}
+            <input type="checkbox" name="case_sensitive" value="true" checked> Case-sensitive<br />
+            {% else %}
+            <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br />
+          {% endif %}
+
+          {% if raw_count=='true' %}
+            <input type="checkbox" name="raw_count" value="true" checked> Raw count (Proportional use of string is default.)<br />
+            {% else %}
+            <input type="checkbox" name="raw_count" value="true"> Raw count (Proportional use of string is default.)<br />
+          {% endif %}
+
+
+
+<br />
+
+          <i>Search string display name (optional)</i><br />
           <input type="text" size="70" value="{{ search_string_name }}" name="search_string_name" />
 
           <!-- Search string options -->
           <br />
 
-          {% if case_sensitive=='true' %}
-            <input type="checkbox" name="case_sensitive" value="true" checked> Case-sensitive<br>
-            {% else %}
-            <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
-          {% endif %}
-
-          <input type="checkbox" name="emoji_tokenize" value="true"> Each emoji considered a token
-
-
+</div>
+<div style = 'float:left'>
 
           <!-- Start and end time -->
           <h3>Start time</h3>
-          <input type="number" name="start_time_unix">
-          <br />
-          <input type="date" name="start_time">
+          <!--<input type="number" name="start_date_unix">-->
+
+          <input type="date" name="start_date" value="{{ start_date }}">
           <br />
 
           <h3>End time</h3>
-          <input type="number" name="end_time_unix">
-          <br />
-          <input type="date" name="end_time">
-          <br />
+          <!--<input type="number" name="end_date_unix">-->
 
+          <input type="date" name="end_date" value="{{ end_date }}">
+          <br />
+</div>
+
+<div style = 'float:left'>
           <h3>Resolution</h3>
-          <input type="radio" name="resolution" value="day"> Day<br>
-          <input type="radio" name="resolution" value="week"> Week<br>
-          <input type="radio" name="resolution" value="month" checked> Month
+          <input type="radio" name="resolution" value="day"> Day<br />
+          <input type="radio" name="resolution" value="week"> Week<br />
+          <input type="radio" name="resolution" value="month" checked> Month<br />
+
+          <input type="hidden" name="auth_key" value="{{auth_key}}">
 
           <br />
-          <h3>Auth key</h3>
-          <input type="text" name="auth_key" value="{{auth_key}}">
-
-
-          <br /><br />
           <input type="submit" name="button" id="plot_button" value="Plot" />
-
-
+</div>
 
         </form>
 
+<p><a href="/static/random_messages.csv">Random messages CSV</a></p>
+
+<!--
         <table>
           {% for item in header %}
             <td style="padding: 15px; text-align: left;">
@@ -154,24 +161,12 @@
 
 
         </table>
+-->
 
-<p><a href="/static/random_messages.csv">Random messages CSV</a></p>
 
 
 <script>
 
-
-var data;
-	$.ajax({
-	  type: "GET",
-	  url: "./static/random_messages.csv",
-	  dataType: "text",
-	  success: function(response)
-	  {
-		data = $.csv.toArrays(response);
-		generateHtmlTable(data);
-	  }
-	});
 
 
 </script>

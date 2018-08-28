@@ -78,11 +78,11 @@ def form():
     try: emoji_tokenize = request.form['emoji_tokenize']
     except: emoji_tokenize = 'false'
 
-    try: start_time_unix = request.form['start_time_unix']
-    except: start_time_unix = 0
+    try: start_date_unix = request.form['start_date_unix']
+    except: start_date_unix = 0
 
-    try: start_time = request.form['start_time']
-    except: start_time = 0
+    try: start_date = request.form['start_date']
+    except: start_date = 0
 
     try: end_time_unix = request.form['end_time_unix']
     except: end_time_unix = 0
@@ -111,17 +111,17 @@ def form():
         client = MongoClient()
         records = client.venmo_data.transactions
 
-        month_unix_start_times = []
+        month_unix_start_dates = []
 
         for year in range(2012, 2019):
             for month in range(1,13):
                 unix_time_start = int(datetime.datetime(year, month, 1, 0, 0).timestamp())
-                month_unix_start_times.append(unix_time_start)
+                month_unix_start_dates.append(unix_time_start)
 
         ## Including this value for debugging purposes. Set the number of
         # months to 12 or 24 to make a quick plot of the first year or two.
 
-        number_of_months = len(month_unix_start_times)
+        number_of_months = len(month_unix_start_dates)
         number_of_months = 16
 
         transaction_counts_by_month = []
@@ -133,17 +133,17 @@ def form():
 
 
 
-        for i in list(range(len(month_unix_start_times)-1))[:number_of_months]:
-            start_time = month_unix_start_times[i]-1
-            end_time = month_unix_start_times[i+1]+1
-            month_string = datetime.datetime.fromtimestamp(month_unix_start_times[i]).strftime('%Y-%m')
+        for i in list(range(len(month_unix_start_dates)-1))[:number_of_months]:
+            start_date = month_unix_start_dates[i]-1
+            end_time = month_unix_start_dates[i+1]+1
+            month_string = datetime.datetime.fromtimestamp(month_unix_start_dates[i]).strftime('%Y-%m')
 
             if case_sensitive == 'true':
-                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
             else:
                 #### NEED TO GET
                 #### A COMMAND THAT ACTUALLT WORKS:
-                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
                 #### Currently a dummy command; canse insensitivity doesn't work yet. @@@@
 
             uses = cursor.count()
@@ -155,7 +155,7 @@ def form():
             random_transaction_lol = []
 
 
-            cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+            cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
 
             j=0
             for item in cursor:
@@ -184,13 +184,13 @@ def form():
 
 
             transaction_counts_by_month.append(uses)
-            #total = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }}).count()
+            #total = records.find({ "unix_time": { "$gt": start_date, "$lt": end_time }}).count()
             #total_counts_by_month.append(total)
             try:
                 percentages_by_month.append(uses/total)
             except:
                 percentages_by_month.append(0)
-            #print(month_unix_start_times[i])
+            #print(month_unix_start_dates[i])
             counter += 1
             with open('./static/counter.txt', 'w') as fo:
                 fo.write(str(round(100*counter/number_of_months, 2))+'%')
@@ -241,17 +241,17 @@ def form():
 
     response = render_template('form.html', plot_complete=plot_complete, search_string=search_string, \
     search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, \
-    start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, \
+    start_date_unix=start_date_unix, start_date=start_date, end_time_unix=end_time_unix, end_time=end_time, \
     resolution=resolution, auth_key = auth_key, header=header)
     return response
 
 
 
-    #, search_string=search_string,start_time=start_time, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
+    #, search_string=search_string,start_date=start_date, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
 
 
             ### Venmo search Flask app variables ###
-            # start_time=start_time,
+            # start_date=start_date,
             # end_time=end_time,
                 ## ^ either entered as text or generated via dropdowns using javascript
             #resolution=resolution,

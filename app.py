@@ -16,6 +16,10 @@ import multiprocessing
 import random
 import collections
 import csv
+from datetime import datetime
+from datetime import timedelta
+from dateutil.relativedelta import relativedelta
+from copy import copy
 
 ## How to hash:
 # hashlib.sha256(b'Hello World').hexdigest()
@@ -56,8 +60,6 @@ def form():
 
     records = client.venmo_data.transactions
 
-    plot_complete = 'false'
-
     search_string_name = ''
     try:
         search_string_name = ''
@@ -66,63 +68,129 @@ def form():
             search_string_name = request.form['search_string_name']
         except:
             pass
-    except:
+    except Exception as e:
+        print(e)
         search_string = ''
         search_string_name = ''
 
-
+    try: raw_count = request.form['raw_count']
+    except: raw_count = 'false'
 
     try: case_sensitive = request.form['case_sensitive']
     except: case_sensitive = 'false'
 
-    try: emoji_tokenize = request.form['emoji_tokenize']
-    except: emoji_tokenize = 'false'
+    try: start_date_unix = request.form['start_date_unix']
+    except: start_date_unix = 0
 
-    try: start_time_unix = request.form['start_time_unix']
-    except: start_time_unix = 0
+    try:
+        start_date = request.form['start_date']
+        if start_date.strip() == '':
+            start_date = '2012-03-20'
+    except: start_date = '2012-03-20'
 
-    try: start_time = request.form['start_time']
-    except: start_time = 0
+    try: end_date_unix = request.form['end_date_unix']
+    except: end_date_unix = 0
 
-    try: end_time_unix = request.form['end_time_unix']
-    except: end_time_unix = 0
-
-    try: end_time  = request.form['end_time']
-    except: end_time = 0
+    try:
+        end_date  = request.form['end_date']
+        if end_date.strip() == '':
+            end_date = '2018-04-24'
+    except: end_date = '2018-04-24'
 
     try: resolution = request.form['resolution']
     except: resolution = 'month'
     ## 'day', 'week', or 'month'
 
+    days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     ### Verifying auth key ###
     try: auth_key = request.form['auth_key']
     except: auth_key = ''
 
-    if password_hash != hashlib.sha256(auth_key.encode(encoding='UTF-8')).hexdigest():
-        response = render_template('auth.html', auth_key=auth_key)
-        return response
+    #if password_hash != hashlib.sha256(auth_key.encode(encoding='UTF-8')).hexdigest():
+#        response = render_template('auth.html', auth_key=auth_key)
+#        return response
 
 
     header = ["Transaction Date", "Message", "Sender Name", "Sender ID", "Target Name", "Target ID"]
 
-    def search_and_plot():
+    def search_and_plot(start_date, end_date, resolution):
 
         client = MongoClient()
         records = client.venmo_data.transactions
 
-        month_unix_start_times = []
+                        ## Rounding to full weeks
+        # Monday is 0 and Sunday is 6.
 
-        for year in range(2012, 2019):
-            for month in range(1,13):
-                unix_time_start = int(datetime.datetime(year, month, 1, 0, 0).timestamp())
-                month_unix_start_times.append(unix_time_start)
 
-        ## Including this value for debugging purposes. Set the number of
-        # months to 12 or 24 to make a quick plot of the first year or two.
 
-        number_of_months = len(month_unix_start_times)
-        number_of_months = 16
+        start_datetime = datetime.strptime(start_date, '%Y-%m-%d')
+        end_datetime = datetime.strptime(end_date, '%Y-%m-%d')
+
+
+        if resolution == 'day':
+            end_datetime += timedelta(days=1)
+
+        elif resolution == 'week':
+            while start_datetime.weekday() != 0:
+                start_datetime += timedelta(days=1)
+            while end_datetime.weekday() != 6:
+                end_datetime -= timedelta(days=1)
+            end_datetime += timedelta(days=1)
+
+        elif resolution == 'month':
+            end_datetime += timedelta(days=1)
+            while int(start_datetime.strftime("%d")) != 1:
+                start_datetime += timedelta(days=1)
+            while int(end_datetime.strftime("%d")) != 1:
+                end_datetime -= timedelta(days=1)
+
+
+
+        start_datetime_list = []
+
+        if resolution == 'day':
+            temp_datetime = copy(start_datetime)
+            for i in range((end_datetime-start_datetime).days):
+                start_datetime_list.append(copy(temp_datetime))
+                temp_datetime += timedelta(days=1)
+            del temp_datetime
+
+        elif resolution == 'week':
+            temp_datetime = copy(start_datetime)
+            weeks = int((end_datetime - start_datetime).days / 7)
+            for i in range(weeks):
+                start_datetime_list.append(copy(temp_datetime))
+                temp_datetime += timedelta(days=7)
+            del temp_datetime
+
+        elif resolution == 'month':
+            temp_datetime = copy(start_datetime)
+            while temp_datetime <= end_datetime:
+                start_datetime_list.append(copy(temp_datetime))
+                time.sleep(0.01)
+                temp_datetime += relativedelta(months=+1)
+                time.sleep(0.01)
+            del temp_datetime
+
+        x_ticks = []
+
+        if resolution == 'day':
+            for item in start_datetime_list:
+                x_ticks.append(item.strftime("%Y-%m-%d"))
+            start_datetime_list = start_datetime_list[:-1] ## Removing extraneous last day label
+
+        elif resolution == 'week':
+            for item in start_datetime_list:
+                x_ticks.append(item.strftime("%Y-%m-%d"))
+            start_datetime_list = start_datetime_list[:-1] ## Removing extraneous last week label
+
+        elif resolution == 'month':
+            for item in start_datetime_list:
+                x_ticks.append(item.strftime("%Y-%m"))
+            start_datetime_list = start_datetime_list[:-1] ## Removing extraneous last month label
+
+        unix_start_times = [int(item.timestamp()) for item in start_datetime_list]
 
         transaction_counts_by_month = []
         total_counts_by_month = []
@@ -132,18 +200,16 @@ def form():
         counter = 0
 
 
-
-        for i in list(range(len(month_unix_start_times)-1))[:number_of_months]:
-            start_time = month_unix_start_times[i]-1
-            end_time = month_unix_start_times[i+1]+1
-            month_string = datetime.datetime.fromtimestamp(month_unix_start_times[i]).strftime('%Y-%m')
+        for i in list(range(len(unix_start_times)-1)):
+            start_date = unix_start_times[i]-1
+            end_date = unix_start_times[i+1]
 
             if case_sensitive == 'true':
-                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
             else:
                 #### NEED TO GET
                 #### A COMMAND THAT ACTUALLT WORKS:
-                cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
                 #### Currently a dummy command; canse insensitivity doesn't work yet. @@@@
 
             uses = cursor.count()
@@ -155,14 +221,17 @@ def form():
             random_transaction_lol = []
 
 
-            cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+            cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
 
             j=0
             for item in cursor:
                 if j in random_indices:
+                    with open('progress_file.txt', 'w') as fo:
+                        fo.write(str(j)+'\n')
                     random_transactions.append(item)
                     unix_time = item['unix_time']
-                    account_created = item['actor']['date_created']
+                    try: account_created = item['actor']['date_created']
+                    except: account_created = 'Unknown'
                     sender_name = item['actor']['name']
                     sender_id = item['actor']['id']
                     picture_url = item['actor']['picture']
@@ -184,37 +253,29 @@ def form():
 
 
             transaction_counts_by_month.append(uses)
-            #total = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }}).count()
+            #total = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }}).count()
             #total_counts_by_month.append(total)
             try:
                 percentages_by_month.append(uses/total)
             except:
                 percentages_by_month.append(0)
-            #print(month_unix_start_times[i])
+            #print(unix_start_times[i])
             counter += 1
             with open('./static/counter.txt', 'w') as fo:
-                fo.write(str(round(100*counter/number_of_months, 2))+'%')
+                fo.write(str(
+                round(100.0*(int(counter)/(len(unix_start_times)-1)), 2)
+                )+'%')
             #print(counter)
 
         percentages_by_month = [item*100 for item in percentages_by_month]
 
-        month_strings = ['2012-01', '2012-02', '2012-03', '2012-04', '2012-05', '2012-06', '2012-07', '2012-08', \
-                         '2012-09', '2012-10', '2012-11', '2012-12', '2013-01', '2013-02', '2013-03', '2013-04', \
-                         '2013-05', '2013-06', '2013-07', '2013-08', '2013-09', '2013-10', '2013-11', '2013-12', \
-                         '2014-01', '2014-02', '2014-03', '2014-04', '2014-05', '2014-06', '2014-07', '2014-08', \
-                         '2014-09', '2014-10', '2014-11', '2014-12', '2015-01', '2015-02', '2015-03', '2015-04', \
-                         '2015-05', '2015-06', '2015-07', '2015-08', '2015-09', '2015-10', '2015-11', '2015-12', \
-                         '2016-01', '2016-02', '2016-03', '2016-04', '2016-05', '2016-06', '2016-07', '2016-08', \
-                         '2016-09', '2016-10', '2016-11', '2016-12', '2017-01', '2017-02', '2017-03', '2017-04', \
-                         '2017-05', '2017-06', '2017-07', '2017-08', '2017-09', '2017-10', '2017-11', '2017-12', \
-                         '2018-01', '2018-02', '2018-03', '2018-04', '2018-05', '2018-06', '2018-07', '2018-08', \
-                         '2018-09', '2018-10', '2018-11'][:number_of_months]
+
 
 
         #High-res file:
         #plt.figure(figsize = (30,16))
         plt.figure(figsize = (15,8))
-        plt.xticks(range(len(month_strings)), month_strings)  # two arguments: tick positions, tick display list
+        plt.xticks(range(len(x_ticks)), x_ticks)  # two arguments: tick positions, tick display list
         plt.xticks(rotation=-85)
         if search_string_name.strip() == '':
             plt.ylabel('Number of messages containing "{}"'.format(search_string))
@@ -227,32 +288,33 @@ def form():
         plt.savefig("./static/plot.png")
 
         time.sleep(0.005)
-        plot_complete = 'true'
+
 
 
     #response = render_template('form_audio.html')
     if search_string.strip() != '':
         background_process = multiprocessing.Process\
                          (name='background_process',\
-                          target=search_and_plot)
+                          target=search_and_plot, \
+                          args = (start_date, end_date, resolution))
         background_process.daemon = True
         background_process.start()
 
 
-    response = render_template('form.html', plot_complete=plot_complete, search_string=search_string, \
-    search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, \
-    start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, \
+    response = render_template('form.html', search_string=search_string, \
+    search_string_name=search_string_name, case_sensitive=case_sensitive, raw_count=raw_count, \
+    start_date_unix=start_date_unix, start_date=start_date, end_date_unix=end_date_unix, end_date=end_date, \
     resolution=resolution, auth_key = auth_key, header=header)
     return response
 
 
 
-    #, search_string=search_string,start_time=start_time, end_time=end_time, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
+    #, search_string=search_string,start_date=start_date, end_date=end_date, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
 
 
             ### Venmo search Flask app variables ###
-            # start_time=start_time,
-            # end_time=end_time,
+            # start_date=start_date,
+            # end_date=end_date,
                 ## ^ either entered as text or generated via dropdowns using javascript
             #resolution=resolution,
                 ## day, week, or month
