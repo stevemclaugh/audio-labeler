@@ -3,3 +3,4 @@ clips/*
 test/*
 .DS_Store
 .idea*
+nohup.out

@@ -13,14 +13,15 @@ from pprint import pprint
 import datetime
 import hashlib
 import multiprocessing
+import random
 import collections
+import csv
 
 ## How to hash:
 # hashlib.sha256(b'Hello World').hexdigest()
 password_hash = '06899b046ad79b40e5ce4aca5cac0f9bbdfcfa2b405900f7ef10ace146fe2710'
 
 client = MongoClient()
-
 records = client.venmo_data.transactions
 
 ## Flask launch loop bash command (for testing):
@@ -37,11 +38,19 @@ try: os.remove("./static/plot.png")
 except: pass
 
 
+## Initializing file
+with open('test.txt', 'w') as fo:
+    fo.write('')
+
+
 
 # Define a route for the default URL, which loads the form
 @app.route('/',methods=['POST','GET'])
 def form():
 
+    # Initializing CSV file
+    with open('./static/random_messages.csv', 'w') as fo:
+        fo.write('')
 
     client = MongoClient()
 
@@ -95,9 +104,12 @@ def form():
         return response
 
 
-
+    header = ["Transaction Date", "Message", "Sender Name", "Sender ID", "Target Name", "Target ID"]
 
     def search_and_plot():
+
+        client = MongoClient()
+        records = client.venmo_data.transactions
 
         month_unix_start_times = []
 
@@ -119,7 +131,7 @@ def form():
 
         counter = 0
 
-        random_transactions = []
+
 
         for i in list(range(len(month_unix_start_times)-1))[:number_of_months]:
             start_time = month_unix_start_times[i]-1
@@ -136,13 +148,39 @@ def form():
 
             uses = cursor.count()
 
-            random_indices = set(random.sample(list(range(uses)), 10))
+            try: random_indices = set(random.sample(list(range(uses)), 3))
+            except: random_indices = set()
+
+            random_transactions = []
+            random_transaction_lol = []
+
+
+            cursor = records.find({ "unix_time": { "$gt": start_time, "$lt": end_time }, 'message': {'$regex': ".*{}.*".format(search_string)}})
 
             j=0
             for item in cursor:
                 if j in random_indices:
                     random_transactions.append(item)
+                    unix_time = item['unix_time']
+                    account_created = item['actor']['date_created']
+                    sender_name = item['actor']['name']
+                    sender_id = item['actor']['id']
+                    picture_url = item['actor']['picture']
+                    username = item['actor']['username']
+                    message = item['message']
+                    transaction_date = item['created_time']
+                    target_name = item['transactions'][0]['target']['name']
+                    target_id = item['transactions'][0]['target']['id']
+                    row = [transaction_date, message, sender_name, sender_id, target_name, target_id]
+                    random_transaction_lol.append(row)
                 j+=1
+
+
+            with open('./static/random_messages.csv', 'a') as fo:
+                csv_writer = csv.writer(fo)
+                csv_writer.writerows(random_transaction_lol)
+
+
 
 
             transaction_counts_by_month.append(uses)
@@ -192,11 +230,6 @@ def form():
         plot_complete = 'true'
 
 
-
-
-
-
-
     #response = render_template('form_audio.html')
     if search_string.strip() != '':
         background_process = multiprocessing.Process\
@@ -206,7 +239,10 @@ def form():
         background_process.start()
 
 
-    response = render_template('form.html', plot_complete=plot_complete, search_string=search_string, search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, resolution=resolution, auth_key = auth_key)
+    response = render_template('form.html', plot_complete=plot_complete, search_string=search_string, \
+    search_string_name=search_string_name, case_sensitive=case_sensitive, emoji_tokenize=emoji_tokenize, \
+    start_time_unix=start_time_unix, start_time=start_time, end_time_unix=end_time_unix, end_time=end_time, \
+    resolution=resolution, auth_key = auth_key, header=header)
     return response
 
 

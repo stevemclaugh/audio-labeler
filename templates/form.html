@@ -4,6 +4,8 @@
   <script src="jquery-3.3.1.slim"></script>
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
   <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
+
   <title>Venmo Search</title>
   <!--
 ### Venmo search Flask app variables ###
@@ -143,7 +145,38 @@
 
         </form>
 
-        <p>{{ start_time }}</p>
+        <table>
+          {% for item in header %}
+            <td style="padding: 15px; text-align: left;">
+              <b>{{ item }}</b>
+            </td>
+          {% endfor %}
+
+
+        </table>
+
+<p><a href="/static/random_messages.csv">Random messages CSV</a></p>
+
+
+<script>
+
+
+var data;
+	$.ajax({
+	  type: "GET",
+	  url: "./static/random_messages.csv",
+	  dataType: "text",
+	  success: function(response)
+	  {
+		data = $.csv.toArrays(response);
+		generateHtmlTable(data);
+	  }
+	});
+
+
+</script>
+
+
 
         <br /><br />
 
