@@ -2,8 +2,31 @@
 
 <head>
   <script src="jquery-3.3.1.slim"></script>
+
+
+<!--  <script>
+
+window.onload=function(){ with (new XMLHttpRequest()) {
+  onreadystatechange=cb; open('GET','./static/random_messages.csv',true); responseType='text';send();
+}}
+function cb(){if(this.readyState===4)document.getElementById('main')
+                                             .innerHTML=tbl(this.responseText); }
+function tbl(csv){ // do whatever is necessary to create your table here ...
+ return csv.split('\n')
+           .map(function(tr,i){return '<tr><td>'
+                                     +tr.replace(/,/g,'</td><td>')
+                                     +'</td></tr>';})
+           .join('\n'); }
+-->
+
+
+</script>
+
   <link rel=stylesheet type=text/css href="{{ url_for('static', filename='style.css') }}">
+
+
   <link href="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css" rel="stylesheet">
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.71/jquery.csv-0.71.min.js"></script>
 
   <title>Venmo Search</title>
@@ -21,75 +44,83 @@
 </head>
 
 <body>
-  <div id="container">
-    <div class="title">
-      <br /><br />
-      <h1></h1>
-      <br /><br />
-    </div>
-
-    <div id="content">
-
-      <div class="container">
-
-        <div class="plot">
-
-          <p>{{ start_time }}</p>
 
 
-          {% if search_string %}
+  <div class="header">
+    <h1></h1>
+    <p></p>
+  </div>
 
-          <h3 id="progress_count">Progress: 0.0%</h3>
-          <img src="{{ url_for('static', filename='plot.png') }}" width=1000 id="plot_img">
-          <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
+  <div class="topnav">
+    <a href="#">Random User</a>
+    <a href="#">NLP</a>
+    <a href="#">Link</a>
+    <a href="#" style="float:right">Link</a>
+  </div>
 
-          <script>
-          var plot_img_element = document.getElementById('plot_img');
-          var loading_element = document.getElementById('loading_img');
-          plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
-          plot_img_element.style.display = "none";
+  <div class="row">
+    <div class="leftcolumn">
+      <div class="card">
+        <h2></h2>
+        <h5></h5>
 
-          var counter_element = document.getElementById('progress_count');
+          </div>
+      <div class="card">
 
-          function loadFile(filePath) {
-            var result = null;
-            var xmlhttp = new XMLHttpRequest();
-            xmlhttp.open("GET", filePath, false);
-            xmlhttp.send();
-            if (xmlhttp.status==200) {
-              result = xmlhttp.responseText;
-            }
-            return result;
-          }
+                            {% if search_string %}
 
+                            <center>
+                            <h3 id="progress_count">Progress: 0.0%</h3>
+                            <img src="{{ url_for('static', filename='plot.png') }}" width=1250 id="plot_img">
+                            <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
+                            </center>
 
-          var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+                          <script>
+                            var plot_img_element = document.getElementById('plot_img');
+                            var loading_element = document.getElementById('loading_img');
+                            plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+                            plot_img_element.style.display = "none";
 
+                            var counter_element = document.getElementById('progress_count');
 
-          setInterval(function() {
-              var plot_img_element = document.getElementById('plot_img');
-              plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
-              counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
-              counter_element.innerHTML = "Progress: " + counter_value;
-              if(counter_value == "100.0%"){
-                plot_img_element.style.display = "block";
-                loading_element.style.display = "none";
-                counter_element.style.display = "none";
-              }
-          }, 5000);
+                            function loadFile(filePath) {
+                              var result = null;
+                              var xmlhttp = new XMLHttpRequest();
+                              xmlhttp.open("GET", filePath, false);
+                              xmlhttp.send();
+                              if (xmlhttp.status==200) {
+                                result = xmlhttp.responseText;
+                              }
+                              return result;
+                            }
 
+                            var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
 
+                            setInterval(function() {
+                                var plot_img_element = document.getElementById('plot_img');
+                                plot_img_element.src = "{{ url_for('static', filename='plot.png') }}";
+                                counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+                                counter_element.innerHTML = "Progress: " + counter_value;
+                                if(counter_value == "100.0%"){
+                                  plot_img_element.style.display = "block";
+                                  loading_element.style.display = "none";
+                                  counter_element.style.display = "none";
+                                }
+                            }, 4500);
 
-          </script>
+                          </script>
 
-          {% endif %}
+                            {% else %}
 
+                            <p>Enter a search term in the right column.<p>
+
+                            {% endif %}
 
 
         </div>
-
-
-
+    </div>
+    <div class="rightcolumn">
+      <div class="card">
         <form method="post" action="{{ url_for('form') }}">
 
           <!--
@@ -111,7 +142,6 @@
             <input type="checkbox" name="case_sensitive" value="true"> Case-sensitive<br>
           {% endif %}
 
-          <input type="checkbox" name="emoji_tokenize" value="true"> Each emoji considered a token
 
 
 
@@ -134,8 +164,8 @@
           <input type="radio" name="resolution" value="month" checked> Month
 
           <br />
-          <h3>Auth key</h3>
-          <input type="text" name="auth_key" value="{{auth_key}}">
+
+          <input type="hidden" name="auth_key" value="{{auth_key}}">
 
 
           <br /><br />
@@ -144,6 +174,65 @@
 
 
         </form>
+      </div>
+      <div class="card">
+        <h3></h3>
+      </div>
+      <div class="card">
+        <h3></h3>
+        <p></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <h2></h2>
+  </div>
+
+
+
+
+
+
+
+
+
+
+<!--    -->
+
+
+
+
+
+
+
+
+  <div id="container">
+    <div class="title">
+      <br /><br />
+      <h1></h1>
+      <br /><br />
+    </div>
+
+    <div id="content">
+
+      <div class="container">
+
+
+
+        {% for item in header %}
+          <!-- -->
+          {% for item in header %}
+            <!-- -->
+            {% for item in header %}
+              <!-- -->
+            {% endfor %}
+          {% endfor %}
+        {% endfor %}
+
+
+
+<!--
 
         <table>
           {% for item in header %}
@@ -157,24 +246,8 @@
 
 <p><a href="/static/random_messages.csv">Random messages CSV</a></p>
 
+-->
 
-<script>
-
-
-var data;
-	$.ajax({
-	  type: "GET",
-	  url: "./static/random_messages.csv",
-	  dataType: "text",
-	  success: function(response)
-	  {
-		data = $.csv.toArrays(response);
-		generateHtmlTable(data);
-	  }
-	});
-
-
-</script>
 
 
 
@@ -182,6 +255,49 @@ var data;
 
       </div>
     </div>
+
+
+<div>
+
+  <p id="jstest"></p>
+
+
+                            <script>
+                              //var plot_img_element = document.getElementById('plot_img');
+
+
+                              var counter_element = document.getElementById('main');
+
+                              function loadFile(filePath) {
+                                var result = null;
+                                var xmlhttp = new XMLHttpRequest();
+                                xmlhttp.open("GET", filePath, false);
+                                xmlhttp.send();
+                                if (xmlhttp.status==200) {
+                                  result = xmlhttp.responseText;
+                                }
+                                return result;
+                              }
+
+                              var csv_text = loadFile("{{ url_for('static', filename='./static/random_messages.csv') }}");
+
+                              setInterval(function() {
+                                var csv_text = loadFile("{{ url_for('static', filename='./static/random_messages.csv') }}");
+                                  var paragraph = document.getElementById('jstest');
+                                  paragraph.innerHTML = csv_text;
+
+                              }, 4500);
+
+                            </script>
+
+
+
+<!--<table id="main"></table>-->
+
+
+
+</div>
+
 </body>
 
 </html>

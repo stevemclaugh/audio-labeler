@@ -1,110 +1,103 @@
-/* Space out content a bit */
+
+* {
+    box-sizing: border-box;
+}
+
 body {
-    padding-top: 20px;
-    padding-bottom: 20px;
+    font-family: Arial;
+    padding: 10px;
+    background: #f1f1f1;
 }
 
-/* Everything but the jumbotron gets side spacing for mobile first views */
-.header,
-.marketing,
-.footer {
-    padding-left: 15px;
-    padding-right: 15px;
-}
-
-/* Custom page header */
+/* Header/Blog Title */
 .header {
-    border-bottom: 1px solid #e5e5e5;
-}
-
-/* Make the masthead heading the same height as the navigation */
-.header h3 {
-    margin-top: 0;
-    margin-bottom: 0;
-    line-height: 40px;
-    padding-bottom: 19px;
-}
-
-/* Custom page footer */
-.footer {
-    padding-top: 19px;
-    color: #777;
-    border-top: 1px solid #e5e5e5;
-}
-
-/* Customize container */
-@media (min-width: 1024px) {
-    .container {
-        max-width: 900px;
-    }
-}
-
-.container-narrow > hr {
-    margin: 30px 0;
-}
-
-/* Supporting marketing content */
-.marketing {
-    margin: 40px 0;
-}
-
-.marketing p + h4 {
-    margin-top: 28px;
-}
-
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-    /* Remove the padding we set earlier */
-    .header,
-    .marketing,
-    .footer {
-        padding-left: 0;
-        padding-right: 0;
-    }
-    /* Space out the masthead */
-    .header {
-        margin-bottom: 30px;
-    }
-}
-
-.controls {
-    padding: 30px 0 15px;
+    padding: 30px;
     text-align: center;
+    background: white;
 }
 
-.controls .btn {
-    margin-bottom: 15px;
+.header h1 {
+    font-size: 50px;
 }
 
-@media screen and (min-width: 990px) {
-    .controls .mark-controls {
-        display: inline;
-    }
+/* Style the top navigation bar */
+.topnav {
+    overflow: hidden;
+    background-color: #333;
 }
 
-.lead {
+/* Style the topnav links */
+.topnav a {
+    float: left;
+    display: block;
+    color: #f2f2f2;
     text-align: center;
+    padding: 14px 16px;
+    text-decoration: none;
+}
+
+/* Change color on hover */
+.topnav a:hover {
+    background-color: #ddd;
+    color: black;
+}
+
+/* Create two unequal columns that floats next to each other */
+/* Left column */
+.leftcolumn {
+    float: left;
+    width: 75%;
+}
+
+/* Right column */
+.rightcolumn {
+    float: left;
+    width: 25%;
+    background-color: #f1f1f1;
+    padding-left: 20px;
+}
+
+/* Fake image */
+.fakeimg {
+    background-color: #aaa;
+    width: 100%;
     padding: 20px;
 }
 
-#waveform {
-    position: relative;
+/* Add a card effect for articles */
+.card {
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
 }
 
-#progress-bar {
-    position: absolute;
-    z-index: 10;
-    top: 50%;
-    margin-top: -10px;
-    left: 5%;
-    width: 90%;
+/* Clear floats after the columns */
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
 }
 
-#drop {
-    border: 3px dashed #ddd;
-    padding: 30px;
+/* Footer */
+.footer {
+    padding: 20px;
+    text-align: center;
+    background: #ddd;
+    margin-top: 20px;
 }
 
-#drop.wavesurfer-dragover {
-    border-color: #333;
+/* Responsive layout - when the screen is less than 800px wide, make the two columns stack on top of each other instead of next to each other */
+@media screen and (max-width: 800px) {
+    .leftcolumn, .rightcolumn {
+        width: 100%;
+        padding: 0;
+    }
+}
+
+/* Responsive layout - when the screen is less than 400px wide, make the navigation links stack on top of each other instead of next to each other */
+@media screen and (max-width: 400px) {
+    .topnav a {
+        float: none;
+        width: 100%;
+    }
 }
