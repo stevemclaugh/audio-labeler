@@ -65,7 +65,7 @@
           }
 
 
-          var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+          var counter_value = loadFile("/static/counter_{{ date_string }}.txt");
 
           function sleep(milliseconds) {
             var start = new Date().getTime();
@@ -79,7 +79,7 @@
           setInterval(function() {
               var plot_img_element = document.getElementById('plot_img');
               plot_img_element.src = "{{ plot_path }}";
-              counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
+              counter_value = loadFile("/static/counter_{{ date_string }}.txt");
               counter_element.innerHTML = "Progress: " + counter_value;
               if(counter_value == "100.0%"){
                 sleep(200);
