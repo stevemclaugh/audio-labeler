@@ -27,7 +27,7 @@ errors = []
 
 ## How to hash:
 # hashlib.sha256(b'Hello World').hexdigest()
-password_hash = '06899b046ad79b40e5ce4aca5cac0f9bbdfcfa2b405900f7ef10ace146fe2710'
+password_hash = '9ec0057874675f64383d5c634b78844d3c7da32fee5245c3bdf6937c64d443a3'
 
 client = MongoClient()
 records = client.venmo_data.transactions
@@ -63,6 +63,9 @@ def form():
     client = MongoClient()
 
     records = client.venmo_data.transactions
+
+    date_string = datetime.now().strftime("%Y-%m-%d_%H%M_%S.%f")
+    plot_path = "./static/plot_{}.png".format(date_string)
 
     search_string_name = ''
     try:
@@ -118,9 +121,9 @@ def form():
     try: auth_key = request.form['auth_key']
     except: auth_key = ''
 
-    #if password_hash != hashlib.sha256(auth_key.encode(encoding='UTF-8')).hexdigest():
-#        response = render_template('auth.html', auth_key=auth_key)
-#        return response
+    if password_hash != hashlib.sha256((auth_key + 'arbitrary_salt').encode(encoding='UTF-8')).hexdigest():
+        response = render_template('auth.html', auth_key=auth_key)
+        return response
 
 
     header = ["Transaction Date", "Message", "Sender Name", "Sender ID", "Target Name", "Target ID"]
@@ -164,7 +167,7 @@ def form():
 
 
 
-    def search_and_plot(start_date, end_date, resolution):
+    def search_and_plot(start_date, end_date, resolution, date_string):
 
         client = MongoClient()
         records = client.venmo_data.transactions
@@ -275,10 +278,13 @@ def form():
                 percentages.append(0)
             #print(unix_start_times[i])
             counter += 1
-            with open('./static/counter.txt', 'w') as fo:
+            counter_path = './static/counter_{}.txt'.format(date_string)
+            with open(counter_path, 'w') as fo:
                 fo.write(str(
                 round(100.0*(int(counter)/(len(unix_start_times)-1)), 2)
                 )+'%')
+            #try: os.remove(counter_path)
+            #except: pass
             #print(counter)
 
 
@@ -343,12 +349,11 @@ def form():
             plt.xlabel('Month', labelpad=25)
 
 
-            plt.gcf().subplots_adjust(bottom=0.15)
+            plt.gcf().subplots_adjust(bottom=0.17)
             plt.plot(percentages)
             time.sleep(0.005)
 
-
-            plt.savefig("./static/plot.png")
+            plt.savefig(plot_path)
 
 
 #####
@@ -358,15 +363,17 @@ def form():
         background_process = multiprocessing.Process\
                          (name='background_process',\
                           target=search_and_plot, \
-                          args = (start_date, end_date, resolution_level))
+                          args = (start_date, end_date, resolution_level, date_string))
         background_process.daemon = True
         background_process.start()
 
-    time.sleep(0.05)
+    time.sleep(0.5)
     response = render_template('form.html', search_string=search_string, \
     search_string_name=search_string_name, case_sensitive=case_sensitive, raw_count=raw_count, \
     start_date_unix=start_date_unix, start_date=start_date, end_date_unix=end_date_unix, end_date=end_date, \
-    resolution=resolution_level, auth_key = auth_key, header=header, random_transaction_lol=random_transaction_lol, random_transaction_length=len(random_transaction_lol))
+    resolution=resolution_level, auth_key = auth_key, header=header, \
+    random_transaction_lol=random_transaction_lol, random_transaction_length=len(random_transaction_lol), \
+    date_string=date_string, plot_path=plot_path)
     return response
 
 
@@ -397,21 +404,25 @@ def user():
     cursor = records.find({'actor.id': str(actor_id)})
     header = ["Transaction Date", "Message", "Target Name", "Target ID"]
 
-
-
+    # Including this in case we get an account with no public outgoing transactions
+    account_created = 'Unknown'
+    actor_name = 'Unknown'
 
     for item in cursor:
         transaction_list.append(str(item))
         unix_time = item['unix_time']
-        account_created = item['actor']['date_created']
-        actor_name = item['actor']['name']
+        try: account_created = item['actor']['date_created']
+        except: account_created = 'Unknown'
+        try: actor_name = item['actor']['name']
+        except: actor_name = 'Unknown'
         picture_url = item['actor']['picture']
         username = item['actor']['username']
         message = item['message']
         transaction_date = item['created_time']
         try: target_name = item['transactions'][0]['target']['name']
         except: target_name = 'Unknown'
-        target_id = item['transactions'][0]['target']['id']
+        try: target_id = item['transactions'][0]['target']['id']
+        except: target_id = 'Unknown'
         row = [transaction_date, message, target_name, target_id]
         transaction_lol.append(row)
 

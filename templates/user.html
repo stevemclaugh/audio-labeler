@@ -19,7 +19,7 @@
 </head>
 
 <body>
-  <div id="container">
+  <div id="container" style="margin-left: 260px">
     <div class="title">
       <br /><br />
       <h1></h1>
@@ -28,13 +28,10 @@
 
     <div id="content">
 
-      <div class="container">
 
-        <div class="plot">
+        <div style='float:left; padding: 40px 40px 40px 40px;'>
 
-
-          <div>
-          <h3>{{ actor_name }}</h3>
+          <h2>{{ actor_name }}</h2>
           <h4>User ID: {{ actor_id }}</h4>
           <h4>Username: {{ username }}</h4>
           <h4>Account created: {{ account_created }}</h4>
@@ -43,7 +40,8 @@
           <img src="{{ picture_url }}" />
 
         </div>
-          <div>
+
+          <div style='float:left; padding: 40px 40px 40px 40px;'>
 
           <h3>Top Friends</h3>
           <table>
@@ -71,17 +69,19 @@
                   <a href="user?id={{ row[0][1] }}&pass=true">{{ row[0][1] }}</a>
                 </td>
 
-                <td style="padding: 15px; text-align: left;">
+                <td style="padding: 15px; text-align: center;">
                     {{ row[1] }}
                 </td>
 
             </tr>
           {% endfor %}
           </table>
+      </div>
+
 </div>
+<br /><br />
+<div style="clear:both;">
 
-
-          <br /><br />
 
           <h3>Outgoing Transactions</h3>
 
@@ -98,7 +98,7 @@
               <td style="padding: 15px; text-align: left;">
                 {{ row[0] }}
               </td>
-              <td style="padding: 15px; text-align: left;">
+              <td style="padding: 15px; text-align: left; max-width: 350px;">
                 {{ row[1] }}
               </td>
               <td style="padding: 15px; text-align: left;">
@@ -112,9 +112,10 @@
           {% endfor %}
           </table>
 
+</div>
 <br /><br />
 
-
+<div style="clear:both;">
 
           <h3>Incoming Transactions</h3>
 
@@ -152,16 +153,11 @@
 
           <form method="post" action="{{ url_for('user') }}">
 
+          <input type="hidden" name="auth_key" value="{{ auth_key }}">
 
-          <h3>Auth key:</h3>
-          <input type="text" name="auth_key" value="{{ auth_key }}">
-          </form>
-
-          <br /><br />
           <input type=hidden name="actor_id" value="{{ actor_id }}">
 
-          <input type="submit" name="button" id="plot_button" value="Enter" />
-
+        </form>
 
 
         </div>
