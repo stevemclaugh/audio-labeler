@@ -40,12 +40,16 @@
           <h3 id="progress_count">Progress: 0.0%</h3>
           <img src="{{ plot_path }}" width=1000 id="plot_img">
           <img src="{{ url_for('static', filename='loading.gif') }}" width=200 id="loading_img">
+          <br />
+          <a href="{{ csv_path }}" id="csv_link"><b>Download CSV</b></a>
 
           <script>
           var plot_img_element = document.getElementById('plot_img');
           var loading_element = document.getElementById('loading_img');
+          var csv_link = document.getElementById('csv_link');
           plot_img_element.src = "{{ plot_path }}";
           plot_img_element.style.display = "none";
+          csv_link.style.display = "none";
 
           var counter_element = document.getElementById('progress_count');
 
@@ -63,6 +67,14 @@
 
           var counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
 
+          function sleep(milliseconds) {
+            var start = new Date().getTime();
+            for (var i = 0; i < 1e7; i++) {
+              if ((new Date().getTime() - start) > milliseconds){
+                break;
+              }
+            }
+          }
 
           setInterval(function() {
               var plot_img_element = document.getElementById('plot_img');
@@ -70,11 +82,13 @@
               counter_value = loadFile("{{ url_for('static', filename='counter.txt') }}");
               counter_element.innerHTML = "Progress: " + counter_value;
               if(counter_value == "100.0%"){
+                sleep(200);
                 plot_img_element.style.display = "block";
+                csv_link.style.display = "block";
                 loading_element.style.display = "none";
                 counter_element.style.display = "none";
               }
-          }, 5000);
+          }, 10000);
 
 
 
@@ -105,7 +119,7 @@
           {% if raw_count=='true' %}
             <input type="checkbox" name="raw_count" value="true" checked> Use raw string count <i>(Percentage use is default.)</i><br />
             {% else %}
-            <input type="checkbox" name="raw_count" value="true"> Raw count (Proportional use of string is default.)<br />
+            <input type="checkbox" name="raw_count" value="true"> Raw count (Percentage use of string is default.)<br />
           {% endif %}
 
 
@@ -185,7 +199,7 @@
 
 {% if random_transaction_length > 0 %}
 
-<br />
+
 
 <div style="clear:both; padding: 40px 40px 40px 40px;">
 <!--<p><a href="/static/random_messages.csv">Random messages CSV</a></p>-->

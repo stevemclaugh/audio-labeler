@@ -115,6 +115,8 @@ def form():
         resolution_level = 'month'
     ## 'day', 'week', or 'month'
 
+    csv_path = './static/' + resolution_level + '_plot_' + search_string.replace(' ', '_').replace(':', '_').replace('/', '_') + "_" + date_string + '.csv'
+
     days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
 
     ### Verifying auth key ###
@@ -243,6 +245,7 @@ def form():
                 x_ticks.append(item.strftime("%Y-%m"))
             start_datetime_list = start_datetime_list[:-1] ## Removing extraneous last month label
 
+
         unix_start_times = [int(item.timestamp()) for item in start_datetime_list]
 
         transaction_counts = []
@@ -273,16 +276,18 @@ def form():
             total = records.find({ "unix_time": { "$gt": start_date_temp, "$lt": end_date_temp }}).count()
             #total_counts.append(total)
             try:
-                percentages.append(uses/total)
+                percentages.append(100 * (uses/total))
             except:
                 percentages.append(0)
             #print(unix_start_times[i])
             counter += 1
             counter_path = './static/counter_{}.txt'.format(date_string)
             with open(counter_path, 'w') as fo:
-                fo.write(str(
-                round(100.0*(int(counter)/(len(unix_start_times)-1)), 2)
-                )+'%')
+                counter_string = str(round(100.0*(int(counter)/(len(unix_start_times)-1)), 2))+'%'
+                if counter_string == '100.0%':
+                    counter_string == '99.9%'
+                fo.write(counter_string)
+
             #try: os.remove(counter_path)
             #except: pass
             #print(counter)
@@ -309,7 +314,10 @@ def form():
             plt.plot(transaction_counts)
             plt.savefig("./static/plot.png")
 
-            time.sleep(0.005)
+            with open(csv_path, 'w') as fo:
+                csv_writer = csv.writer(fo)
+                csv_writer.writerow(['Start date', 'String appearance count'])
+                csv_writer.writerows(list(zip(x_ticks, transaction_counts)))
 
 ###
         else:
@@ -355,6 +363,13 @@ def form():
 
             plt.savefig(plot_path)
 
+            with open(csv_path, 'w') as fo:
+                csv_writer = csv.writer(fo)
+                csv_writer.writerow(['Start date', 'String appearance percentage (%)'])
+                csv_writer.writerows(list(zip(x_ticks, percentages)))
+
+            with open(counter_path, 'w') as fo:
+                fo.write('100.0%')
 
 #####
 
@@ -373,7 +388,7 @@ def form():
     start_date_unix=start_date_unix, start_date=start_date, end_date_unix=end_date_unix, end_date=end_date, \
     resolution=resolution_level, auth_key = auth_key, header=header, \
     random_transaction_lol=random_transaction_lol, random_transaction_length=len(random_transaction_lol), \
-    date_string=date_string, plot_path=plot_path)
+    date_string=date_string, plot_path=plot_path, csv_path=csv_path)
     return response
 
 
@@ -473,6 +488,6 @@ def user():
 # Run the app
 if __name__ == '__main__':
     app.run(threaded=True,
-        #host="0.0.0.0",
-        port=int("8000")
+        host="0.0.0.0",
+        port=int("8050")
     )
