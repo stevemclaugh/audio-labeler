@@ -5,6 +5,7 @@ from flask import Flask, render_template, request, url_for
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+from matplotlib import rc
 import numpy as np
 import time
 import os
@@ -20,6 +21,9 @@ from datetime import datetime
 from datetime import timedelta
 from dateutil.relativedelta import relativedelta
 from copy import copy
+
+
+errors = []
 
 ## How to hash:
 # hashlib.sha256(b'Hello World').hexdigest()
@@ -62,7 +66,6 @@ def form():
 
     search_string_name = ''
     try:
-        search_string_name = ''
         search_string = request.form['search_string']
         try:
             search_string_name = request.form['search_string_name']
@@ -94,11 +97,19 @@ def form():
     try:
         end_date  = request.form['end_date']
         if end_date.strip() == '':
-            end_date = '2018-04-24'
-    except: end_date = '2018-04-24'
+            end_date = '2013-04-24'
+            #end_date = '2018-04-24'
+    except:
+        end_date = '2013-04-24'
+        #end_date = '2018-04-24'
 
-    try: resolution = request.form['resolution']
-    except: resolution = 'month'
+    try: resolution_level = request.form['resolution']
+    except Exception as e:
+        errors.append(e)
+        with open('errors.txt', 'w') as fo:
+            fo.write(str(e))
+            fo.write('\n')
+        resolution_level = 'month'
     ## 'day', 'week', or 'month'
 
     days_of_week = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -113,6 +124,45 @@ def form():
 
 
     header = ["Transaction Date", "Message", "Sender Name", "Sender ID", "Target Name", "Target ID"]
+
+    random_transactions = []
+    random_transaction_lol = []
+
+    if search_string.strip() != '':
+
+        j = 0
+
+        while len(random_transaction_lol) < 25:
+            cursor = records.aggregate( [{ "$sample": { "size": 1000 } }] )
+            for item in cursor:
+                if search_string.lower() in item['message'].lower():
+                    random_transactions.append(item)
+
+                    unix_time = item['unix_time']
+                    try: account_created = item['actor']['date_created']
+                    except: account_created = 'Unknown'
+                    sender_name = item['actor']['name']
+                    sender_id = item['actor']['id']
+                    picture_url = item['actor']['picture']
+                    username = item['actor']['username']
+                    message = item['message']
+                    transaction_date = item['created_time']
+                    try: target_name = item['transactions'][0]['target']['name']
+                    except: target_name = 'Unknown'
+                    try: target_id = item['transactions'][0]['target']['id']
+                    except: target_id = 'Unknown'
+                    row = [transaction_date, message, sender_name, sender_id, target_name, target_id]
+                    random_transaction_lol.append(row)
+            if j > 12:
+                break
+            j+=1
+
+
+        with open('./static/random_messages.csv', 'a') as fo:
+            csv_writer = csv.writer(fo)
+            csv_writer.writerows(random_transaction_lol)
+
+
 
     def search_and_plot(start_date, end_date, resolution):
 
@@ -192,73 +242,37 @@ def form():
 
         unix_start_times = [int(item.timestamp()) for item in start_datetime_list]
 
-        transaction_counts_by_month = []
-        total_counts_by_month = []
+        transaction_counts = []
+        total_counts = []
 
-        percentages_by_month = []
+        percentages = []
 
         counter = 0
 
 
+
         for i in list(range(len(unix_start_times)-1)):
-            start_date = unix_start_times[i]-1
-            end_date = unix_start_times[i+1]
+            start_date_temp = unix_start_times[i]-1
+            end_date_temp = unix_start_times[i+1]
 
             if case_sensitive == 'true':
-                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date_temp, "$lt": end_date_temp }, 'message': {'$regex': ".*{}.*".format(search_string)}})
             else:
                 #### NEED TO GET
                 #### A COMMAND THAT ACTUALLT WORKS:
-                cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
+                cursor = records.find({ "unix_time": { "$gt": start_date_temp, "$lt": end_date_temp }, 'message': {'$regex': ".*{}.*".format(search_string)}}).collation( { "locale": 'en', "strength": 2 } )
                 #### Currently a dummy command; canse insensitivity doesn't work yet. @@@@
 
             uses = cursor.count()
 
-            try: random_indices = set(random.sample(list(range(uses)), 3))
-            except: random_indices = set()
-
-            random_transactions = []
-            random_transaction_lol = []
-
-
-            cursor = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }, 'message': {'$regex': ".*{}.*".format(search_string)}})
-
-            j=0
-            for item in cursor:
-                if j in random_indices:
-                    with open('progress_file.txt', 'w') as fo:
-                        fo.write(str(j)+'\n')
-                    random_transactions.append(item)
-                    unix_time = item['unix_time']
-                    try: account_created = item['actor']['date_created']
-                    except: account_created = 'Unknown'
-                    sender_name = item['actor']['name']
-                    sender_id = item['actor']['id']
-                    picture_url = item['actor']['picture']
-                    username = item['actor']['username']
-                    message = item['message']
-                    transaction_date = item['created_time']
-                    target_name = item['transactions'][0]['target']['name']
-                    target_id = item['transactions'][0]['target']['id']
-                    row = [transaction_date, message, sender_name, sender_id, target_name, target_id]
-                    random_transaction_lol.append(row)
-                j+=1
-
-
-            with open('./static/random_messages.csv', 'a') as fo:
-                csv_writer = csv.writer(fo)
-                csv_writer.writerows(random_transaction_lol)
-
-
-
-
-            transaction_counts_by_month.append(uses)
-            #total = records.find({ "unix_time": { "$gt": start_date, "$lt": end_date }}).count()
-            #total_counts_by_month.append(total)
+            # Calculating total transactions over the same period
+            transaction_counts.append(uses)
+            total = records.find({ "unix_time": { "$gt": start_date_temp, "$lt": end_date_temp }}).count()
+            #total_counts.append(total)
             try:
-                percentages_by_month.append(uses/total)
+                percentages.append(uses/total)
             except:
-                percentages_by_month.append(0)
+                percentages.append(0)
             #print(unix_start_times[i])
             counter += 1
             with open('./static/counter.txt', 'w') as fo:
@@ -267,61 +281,93 @@ def form():
                 )+'%')
             #print(counter)
 
-        percentages_by_month = [item*100 for item in percentages_by_month]
 
 
 
+###
+        if raw_count == 'true':
 
-        #High-res file:
-        #plt.figure(figsize = (30,16))
-        plt.figure(figsize = (15,8))
-        plt.xticks(range(len(x_ticks)), x_ticks)  # two arguments: tick positions, tick display list
-        plt.xticks(rotation=-85)
-        if search_string_name.strip() == '':
-            plt.ylabel('Number of messages containing "{}"'.format(search_string))
-            plt.title('"{}" use over time'.format(search_string))
+            #High-res file:
+            #plt.figure(figsize = (30,16))
+            plt.figure(figsize = (15,8))
+            plt.tight_layout()
+            plt.xticks(range(len(x_ticks)), x_ticks)  # two arguments: tick positions, tick display list
+            plt.xticks(rotation=-85)
+            if search_string_name.strip() == '':
+                plt.ylabel('Number of messages containing "{}"'.format(search_string))
+                plt.title('"{}" use over time'.format(search_string))
+            else:
+                plt.ylabel('Number of messages containing {}'.format(search_string_name.lower()))
+                plt.title('"{}" use over time'.format(search_string_name))
+            plt.xlabel('Month')
+            plt.plot(transaction_counts)
+            plt.savefig("./static/plot.png")
+
+            time.sleep(0.005)
+
+###
         else:
-            plt.ylabel('Number of messages containing "{}"'.format(search_string_name.lower()))
-            plt.title('"{}" use over time'.format(search_string_name))
-        plt.xlabel('Month')
-        plt.plot(transaction_counts_by_month)
-        plt.savefig("./static/plot.png")
 
-        time.sleep(0.005)
+            #rc('font',**{'family':'sans-serif','sans-serif':['Helvetica']})
+            rc('font',**{'family':'serif','serif':['Times']})
+            rc('text', usetex=False)
 
 
+            font = {
+                    'weight' : 'normal',
+                    'size'   : 26}
+
+            matplotlib.rc('font', **font)
+
+
+            plt.figure(figsize = (30,16))
+
+            plt.tight_layout()
+
+
+            lol = [[item, '', '', ''] for item in x_ticks[::4]]
+            final_ticks = [item for sublist in lol for item in sublist]
+
+            plt.xticks(range(len(x_ticks)), final_ticks)  # two arguments: tick positions, tick display list
+
+            plt.tick_params(pad=15)
+            plt.xticks(rotation=-85)
+
+            if search_string_name.strip() == '':
+                plt.ylabel('Percent (%) of messages containing "{}"'.format(search_string))
+                plt.title('"{}" use over time'.format(search_string))
+            else:
+                plt.ylabel('Percent (%) of messages containing {}'.format(search_string_name.lower()))
+                plt.title('"{}" use over time'.format(search_string_name))
+
+            plt.xlabel('Month', labelpad=25)
+
+
+            plt.gcf().subplots_adjust(bottom=0.15)
+            plt.plot(percentages)
+            time.sleep(0.005)
+
+
+            plt.savefig("./static/plot.png")
+
+
+#####
 
     #response = render_template('form_audio.html')
     if search_string.strip() != '':
         background_process = multiprocessing.Process\
                          (name='background_process',\
                           target=search_and_plot, \
-                          args = (start_date, end_date, resolution))
+                          args = (start_date, end_date, resolution_level))
         background_process.daemon = True
         background_process.start()
 
-
+    time.sleep(0.05)
     response = render_template('form.html', search_string=search_string, \
     search_string_name=search_string_name, case_sensitive=case_sensitive, raw_count=raw_count, \
     start_date_unix=start_date_unix, start_date=start_date, end_date_unix=end_date_unix, end_date=end_date, \
-    resolution=resolution, auth_key = auth_key, header=header)
+    resolution=resolution_level, auth_key = auth_key, header=header, random_transaction_lol=random_transaction_lol, random_transaction_length=len(random_transaction_lol))
     return response
-
-
-
-    #, search_string=search_string,start_date=start_date, end_date=end_date, resolution=resolution, title=title, xlabel=xlabel, ylabel=ylabel)
-
-
-            ### Venmo search Flask app variables ###
-            # start_date=start_date,
-            # end_date=end_date,
-                ## ^ either entered as text or generated via dropdowns using javascript
-            #resolution=resolution,
-                ## day, week, or month
-            # title=title, xlabel=xlabel, ylabel=ylabe
-                ## Title and labels to be rendered in plot. Reasonable default if not specified.
-
-
 
 
 
@@ -363,7 +409,8 @@ def user():
         username = item['actor']['username']
         message = item['message']
         transaction_date = item['created_time']
-        target_name = item['transactions'][0]['target']['name']
+        try: target_name = item['transactions'][0]['target']['name']
+        except: target_name = 'Unknown'
         target_id = item['transactions'][0]['target']['id']
         row = [transaction_date, message, target_name, target_id]
         transaction_lol.append(row)
@@ -405,7 +452,7 @@ def user():
     response = render_template('user.html', actor_id=actor_id, username=username, header = header, header_incoming=header_incoming, \
     transaction_count=transaction_count, account_created=account_created, actor_name=actor_name, \
     picture_url=picture_url, transaction_lol=transaction_lol, incoming_transaction_lol=incoming_transaction_lol, \
-    top_friends=top_friends, auth_key=auth_key, incoming_transaction_count=incoming_transaction_count)
+    top_friends=top_friends, auth_key=auth_key, incoming_transaction_count=incoming_transaction_count, errors=errors)
     return response
 
 
